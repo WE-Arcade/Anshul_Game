@@ -3,6 +3,7 @@ const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const morgan = require('morgan');
+const userRoutes = require("./routes/userRoutes"); 
 
 const connectDB = require('./config/database'); 
 
@@ -23,6 +24,8 @@ app.use(morgan('dev')); //HTTP request logger middleware for Node.js(helps to de
 app.get('/', (req, res) => {
     res.send('Welcome to the TalentBridge Backend!');
 });
+
+app.use("/api/users", userRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server runnning on ${PORT}`));
