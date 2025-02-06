@@ -87,7 +87,28 @@ For detailed API documentation, check **API_docs.md**.
 
 ## 📂 **Project Structure**
 ```
-will be updated later on
+ANSHUL_GAME/
+│── config/                 # Configuration files
+│   ├── database.js         # MongoDB connection setup
+│
+│── controller/             # Controllers (Business Logic)
+│   ├── userController.js   # Handles user-related API logic
+│
+│── models/                 # Database Schemas
+│   ├── User.js             # User model schema
+│
+│── routes/                 # API Routes
+│   ├── userRoutes.js       # Routes for user-related actions
+│
+│── .env                    # Environment variables (DO NOT COMMIT)
+│── .gitignore              # Ignore files like node_modules, .env
+│── API_docs.md             # API documentation for frontend integration
+│── README.md               # Project documentation
+│── package.json            # Dependencies & npm scripts
+│── package-lock.json       # Locked versions of dependencies
+│── server.js               # Main entry point (Express server)
+│── Anshul's Game - WE Arcade_GameDesignPlan.pdf  # Game Design Plan (Reference)
+
 ```
 ---
 
