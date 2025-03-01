@@ -764,8 +764,17 @@ function askDSAQuestion(player, gem) {
     modal.setScrollFactor(0);
     
     // Add the sage at the top left of the modal
-    sage = this.add.image(modalX + 80, modalY + 60, 'sage').setScale(0.4);
+    sage = this.add.image(modalX + 30 , modalY - 70, 'sage').setScale(0.4);
     sage.setScrollFactor(0);
+    
+    this.tweens.add({
+        targets: sage,
+        y: sage.y - 10, // Moves up slightly
+        duration: 1000, // Time for movement (1 second)
+        ease: 'Sine.easeInOut',
+        yoyo: true, // Moves back and forth
+        repeat: -1 // Infinite loop
+    });
     
     // Add header
     const headerText = this.add.text(modalX + 350, modalY + 30, 'Code Challenge!', {
@@ -779,12 +788,28 @@ function askDSAQuestion(player, gem) {
     
     // DSA Tree Questions
     const dsaQuestions = [
-        { q: "What is the time complexity of binary search?", a: ["O(n)", "O(log n)", "O(1)"], correct: 1 },
-        { q: "Which data structure follows FIFO?", a: ["Stack", "Queue", "Heap"], correct: 1 },
-        { q: "What's the worst-case time complexity of quicksort?", a: ["O(n log n)", "O(n²)", "O(n)"], correct: 1 },
-        { q: "Which data structure is used for implementing recursion?", a: ["Queue", "Stack", "Array"], correct: 1 },
-        { q: "What data structure would you use for breadth-first search?", a: ["Stack", "Queue", "Heap"], correct: 1 }
+        { q: "What is a tree in data structures?", a: ["A linear data structure", "A non-linear data structure", "A type of array"], correct: 1 },
+        { q: "Which of the following is true about Binary Trees?", a: ["Each node has at most 3 children", "Each node has at most 2 children", "Each node has exactly 2 children"], correct: 1 },
+        { q: "What is the time complexity for searching in a Binary Search Tree (BST) in the worst case?", a: ["O(log n)", "O(n)", "O(1)"], correct: 1 },
+        { q: "Which tree is perfectly balanced and ensures O(log n) search time?", a: ["AVL Tree", "Binary Search Tree", "B-Tree"], correct: 0 },
+        { q: "What is the height of a perfectly balanced binary tree with n nodes?", a: ["O(n)", "O(log n)", "O(√n)"], correct: 1 },
+        { q: "Which of the following is NOT a self-balancing binary search tree?", a: ["Red-Black Tree", "AVL Tree", "Binary Heap"], correct: 2 },
+        { q: "Which traversal method is used for depth-first search (DFS) in trees?", a: ["Inorder, Preorder, Postorder", "Level Order", "Breadth-First Search"], correct: 0 },
+        { q: "What is the difference between a Tree and a Graph?", a: ["Trees have cycles, graphs don’t", "Graphs can have cycles, trees don’t", "Both are the same"], correct: 1 },
+        { q: "Which tree traversal visits the nodes in sorted order in a Binary Search Tree (BST)?", a: ["Preorder", "Inorder", "Postorder"], correct: 1 },
+        { q: "In a complete binary tree, how many child nodes can a node have at most?", a: ["1", "2", "3"], correct: 1 },
+        { q: "Which tree is used in database indexing?", a: ["Binary Search Tree", "B-Tree", "AVL Tree"], correct: 1 },
+        { q: "Which tree traversal is used for Breadth-First Search (BFS)?", a: ["Level Order Traversal", "Inorder Traversal", "Postorder Traversal"], correct: 0 },
+        { q: "What is the time complexity of insertion in an AVL tree in the worst case?", a: ["O(n)", "O(log n)", "O(1)"], correct: 1 },
+        { q: "Which of the following is true about a Full Binary Tree?", a: ["Every node has 0 or 2 children", "Every node has exactly 2 children", "All levels are completely filled"], correct: 0 },
+        { q: "What is the space complexity of storing a binary tree with n nodes?", a: ["O(n)", "O(log n)", "O(1)"], correct: 0 },
+        { q: "Which type of tree is used in Huffman Encoding?", a: ["Binary Search Tree", "Trie", "Huffman Tree"], correct: 2 },
+        { q: "What is the main advantage of Red-Black Trees over AVL Trees?", a: ["Faster lookups", "Faster insertion and deletion", "Easier implementation"], correct: 1 },
+        { q: "Which tree property makes AVL trees self-balancing?", a: ["Red and Black Coloring", "Height Balance Factor", "Min-Heap Property"], correct: 1 },
+        { q: "What is the best-case time complexity for searching an element in a Binary Search Tree?", a: ["O(1)", "O(log n)", "O(n)"], correct: 0 },
+        { q: "Which traversal is best for copying a binary tree?", a: ["Inorder", "Preorder", "Postorder"], correct: 1 }
     ];
+    
     
     // Select a random question
     let randomQ = Phaser.Math.Between(0, dsaQuestions.length - 1);
@@ -806,7 +831,7 @@ function askDSAQuestion(player, gem) {
     questionActive = true;
     selectedOption = 0;
 
-    const buttonWidth = 300; 
+    const buttonWidth = 500; 
     const buttonHeight = 40;
     const buttonBg = [];
     
@@ -816,8 +841,7 @@ function askDSAQuestion(player, gem) {
         // Create background for each button
         let bg = this.add.graphics();
         bg.fillStyle(index === 0 ? 0x555555 : 0x333333, 1);
-        bg.fillRoundedRect(modalX + 350 - (buttonWidth / 2), modalY + yOffset - (buttonHeight / 2), 
-                          buttonWidth, buttonHeight, 8);
+        bg.fillRoundedRect(modalX + 350 - (buttonWidth / 2), modalY + yOffset - (buttonHeight / 2), buttonWidth, buttonHeight, 8);
         bg.setScrollFactor(0);
         buttonBg.push(bg);
     });
