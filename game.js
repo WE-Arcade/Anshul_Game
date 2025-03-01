@@ -15,12 +15,15 @@ const config = {
 
 const game = new Phaser.Game(config);
 let duck, cursors, timer, timerText, hearts, coinsCollected = 0;
-let life = 3, timerValue = 60;
+let life = 3, timerValue = 120;
 var bombs, platforms, stars, books;
 let selectedOption = 0, questionActive = false, questionText, answerButtons = [], sage;
 let isInvincible = false; //for the duck
 let worldHeight = 10000;
 let worldWidth = 1536;
+
+let winningPlatform, flag, asokan;
+let gameWon = false;
 
 function preload() {
     this.load.image('sky', 'assets/sky.png'); 
@@ -41,14 +44,12 @@ function preload() {
     this.load.image('block', 'assets/block.png'); 
     this.load.image('cloud', 'assets/cloud.png'); 
     this.load.image('ground', 'assets/ground.png');   
+    this.load.image('asokan', 'assets/asokan_sage.png');
+    this.load.image('flag', 'assets/flag.png');
 }
 
 function create() {
 
-    // this.physics.world.setBounds(0, 0, 1536, worldHeight);
-    // this.cameras.main.setBounds(0, 0, 1536, worldHeight);
-    
-    
     // // Sky Background
     for (let i = 0; i < worldHeight; i += 735) {
         this.add.image(768, i, 'background').setScale(3);
@@ -61,7 +62,7 @@ function create() {
         tile.setScale(1).refreshBody();
     }
 
-    // Duck (Player)
+    // Duck 
     duck = this.physics.add.sprite(100, worldHeight - 100, 'duck').setScale(0.2);
     duck.setBounce(0.2);
     duck.setCollideWorldBounds(true);
@@ -85,7 +86,7 @@ function create() {
             else{
                 branchWidth = Phaser.Math.Between(300, 500);
             }
-            let xOffset = (j - 1) * branchWidth + Phaser.Math.Between(-50, 50);
+            let xOffset = (j - 1) * branchWidth + Phaser.Math.Between(0, 50);
             let yOffset = -levelGap * i;
             let nodeType = Phaser.Math.RND.pick(['node','block', 'floatingIsland', 'gemBlock']);
     
@@ -137,7 +138,7 @@ function create() {
     this.coinsText = this.add.text(1430, 20, '0', { fontSize: '24px', fill: '#fff' });
     this.coinsText.setScrollFactor(0);
     // Timer
-    this.timerText = this.add.text(720, 20, 'Time: 60', { fontSize: '24px', fill: '#fff' });
+    this.timerText = this.add.text(720, 20, 'Time: 120', { fontSize: '24px', fill: '#fff' });
     this.time.addEvent({
         delay: 1000,
         callback: () => {
@@ -168,30 +169,53 @@ function create() {
 
     // Code Bugs (Enemies)
     bugs = this.physics.add.group();
-    let bugSpeed = 50;
-    platforms.children.iterate((platform) => {
-        if (Phaser.Math.Between(0, 1)) {
-            let bug = bugs.create(platform.x, platform.y - 10, 'bug');
-            bug.setScale(0.03);
-            bug.setBounce(0.2);
-        }
-    });
+    let bugSpeed = 60;
+    
+    // Create bugs on platforms
+    let platformsArray = platforms.getChildren();
+    // Shuffle the platforms array to randomize which platforms get bugs
+    Phaser.Utils.Array.Shuffle(platformsArray);
+    
+    // Use only 90% of platforms for bugs
+    let platformsForBugs = platformsArray.slice(0, Math.floor(platformsArray.length * 0.9));
+    
+    platformsForBugs.forEach((platform) => {
+        let xOffset = Phaser.Math.Between(-50, 50);
+        let yOffset = Phaser.Math.Between(-50, -30);
+        
+        let bug = bugs.create(platform.x + xOffset, platform.y + yOffset, 'bug');
+        bug.setScale(0.03);
+        bug.setBounce(0.2);
+        bug.setCollideWorldBounds(false);
+        bug.body.allowGravity = false;
+        
+        // Set initial direction and velocity
+        bug.direction = Phaser.Math.Between(0, 1) ? 1 : -1;
+        bug.setVelocityX(bug.direction * bugSpeed);
+        
+         // Set movement range
+         bug.startX = bug.x;
+         bug.moveDistance = Phaser.Math.Between(50, 200);
+         
+         // Add a timer for direction changes
+         this.time.addEvent({
+             delay: Phaser.Math.Between(1500, 3000),
+             callback: () => {
+                 if (!bug.active) return; // Skip if bug has been destroyed
+                 
+                 // Change direction
+                 bug.direction *= -1;
+                 bug.setVelocityX(bug.direction * bugSpeed);
+             },
+             loop: true
+         });
+     });
+    
     this.physics.add.collider(bugs, platforms);
     this.physics.add.collider(bugs, ground);
-    // this.physics.add.collider(duck, bugs, hitBug, null, this);
+    this.physics.add.collider(duck, bugs, hitBug, null, this);
 
-    // Moving bugs left and right
-    bugs.children.iterate((bug) => {
-        this.tweens.add({
-            targets: bug,
-            x: bug.x + Phaser.Math.Between(100, 200),
-            duration: 2000,
-            yoyo: true,
-            repeat: -1
-        });
-    });
-
-    // this.physics.add.overlap(duck, gemBlocks, askDSAQuestion, null, this);
+    this.physics.add.overlap(duck, gemBlocks, askDSAQuestion, null, this);
 
     this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
     this.physics.world.setBounds(0, 0, worldWidth, worldHeight);
@@ -202,10 +226,6 @@ function create() {
     // Controls
     cursors = this.input.keyboard.createCursorKeys();
 
-    // for answering DSA Questions
-    this.input.keyboard.on('keydown-UP', () => moveSelection(-1));
-    this.input.keyboard.on('keydown-DOWN', () => moveSelection(1));
-    this.input.keyboard.on('keydown-ENTER', selectAnswer);
 }
 
 function collectStar(duck, star) {
@@ -322,64 +342,239 @@ function winGame(scene) {
 }
 
 function askDSAQuestion(player, gem) {
+    // Pause the physics
+    this.physics.pause();
+    
+    // Store scene reference for later use
+    const scene = this;
+    
+    // Remember gem position and replace it with a node
     let gemX = gem.x;
     let gemY = gem.y;
     gem.destroy();
-    let newNode = this.physics.add.staticSprite(gemX, gemY, 'node').setScale(0.2);
-    newNode.body.setCircle((newNode.displayWidth * 0.9) / 2); 
-    newNode.body.setOffset( (newNode.displayWidth * 0.1) / 2, (newNode.displayHeight * 0.1) / 2); 
-    this.physics.add.collider(duck, newNode);
-    newNode.refreshBody();
-    let questionText = this.add.text(550, 550, '', { fontSize: '24px', fill: '#fff', backgroundColor: '#000'  });
-    sage = this.add.image(750, 500, 'sage').setScale(0.6);
-
+    
+    // Create modal background
+    const modalWidth = 700;
+    const modalHeight = 300;
+    const modalX = (this.cameras.main.width / 2) - (modalWidth / 2);
+    const modalY = (this.cameras.main.height / 2) - (modalHeight / 2);
+    
+    // Create modal background with rounded corners
+    const modal = this.add.graphics();
+    modal.fillStyle(0x000000, 0.9);
+    modal.fillRoundedRect(modalX, modalY, modalWidth, modalHeight, 16);
+    modal.lineStyle(4, 0xffffff, 1);
+    modal.strokeRoundedRect(modalX, modalY, modalWidth, modalHeight, 16);
+    
+    // Make the modal fixed to the camera
+    modal.setScrollFactor(0);
+    
+    // Add the sage at the top left of the modal
+    sage = this.add.image(modalX + 80, modalY + 80, 'sage').setScale(0.4);
+    sage.setScrollFactor(0);
+    
+    // Add header
+    const headerText = this.add.text(modalX + 350, modalY + 30, 'Code Challenge!', {
+        fontSize: '28px',
+        fontFamily: 'Arial',
+        fill: '#FFD700',
+        fontStyle: 'bold'
+    });
+    headerText.setOrigin(0.5, 0.5);
+    headerText.setScrollFactor(0);
+    
+    // DSA Tree Questions
     const dsaQuestions = [
         { q: "What is the time complexity of binary search?", a: ["O(n)", "O(log n)", "O(1)"], correct: 1 },
-        { q: "Which DS follows FIFO?", a: ["Stack", "Queue", "Heap"], correct: 1 }
+        { q: "Which data structure follows FIFO?", a: ["Stack", "Queue", "Heap"], correct: 1 },
+        { q: "What's the worst-case time complexity of quicksort?", a: ["O(n log n)", "O(n²)", "O(n)"], correct: 1 },
+        { q: "Which data structure is used for implementing recursion?", a: ["Queue", "Stack", "Array"], correct: 1 },
+        { q: "What data structure would you use for breadth-first search?", a: ["Stack", "Queue", "Heap"], correct: 1 }
     ];
-
+    
+    // Select a random question
     let randomQ = Phaser.Math.Between(0, dsaQuestions.length - 1);
     let q = dsaQuestions[randomQ];
+    
+    // Add question text
+    questionText = this.add.text(modalX + 350, modalY + 100, q.q, {
+        fontSize: '24px',
+        fontFamily: 'Arial',
+        fill: '#ffffff',
+        align: 'center',
+        wordWrap: { width: modalWidth - 80 }
+    });
+    questionText.setOrigin(0.5, 0.5);
+    questionText.setScrollFactor(0);
+    
+    // Set up the answer buttons
+    answerButtons = [];
+    questionActive = true;
+    selectedOption = 0;
 
-    questionText.setText(q.q);
-    let buttons = [];
+    const buttonWidth = 300; 
+    const buttonHeight = 40;
+    const buttonBg = [];
+    
+    q.a.forEach((answer, index) => {
+        const yOffset = 160 + (index * 40);
+        
+        // Create background for each button
+        let bg = this.add.graphics();
+        bg.fillStyle(index === 0 ? 0x555555 : 0x333333, 1);
+        bg.fillRoundedRect(modalX + 350 - (buttonWidth / 2), modalY + yOffset - (buttonHeight / 2), 
+                          buttonWidth, buttonHeight, 8);
+        bg.setScrollFactor(0);
+        buttonBg.push(bg);
+    });
 
     q.a.forEach((answer, index) => {
-        let btn = this.add.text(550, 580 + index * 30, answer, { fontSize: '20px', fill: '#ff0',  backgroundColor: '#333' })
-            .setInteractive()
-            .on('pointerdown', () => {
-                if (index === q.correct) {
-                    coinsCollected += 50;
-                } else {
-                    life--;
-                }
-                buttons.forEach(b => b.destroy());
-                questionText.setText('');
-            });
-        buttons.push(btn);
+        const yOffset = 160 + (index * 40);
+        
+        // Create the text on top of the background
+        let btn = this.add.text(modalX + 350, modalY + yOffset, index === 0 ? '➤ ' + answer : '  ' + answer, {
+            fontSize: '20px',
+            fontFamily: 'Arial',
+            fill: '#ffffff'
+        });
+        btn.setOrigin(0.5, 0.5);
+        btn.setScrollFactor(0);
+        
+        // Store both text and background
+        answerButtons.push({
+            text: btn,
+            background: buttonBg[index]
+        });
     });
-}
-
-
-function moveSelection(direction) {
-    if (!questionActive) return;
-    answerButtons[selectedOption].setStyle({ backgroundColor: '#333' });
-    selectedOption = (selectedOption + direction + answerButtons.length) % answerButtons.length;
-    answerButtons[selectedOption].setStyle({ backgroundColor: '#555' });
-}
-
-function selectAnswer() {
-    if (!questionActive) return;
     
-    if (selectedOption === 1) {
-        coinsCollected += 50;
-    } else {
-        life--;
-    }
+    const uiElements = [modal, sage, headerText, questionText];
+    answerButtons.forEach(btn => {
+        uiElements.push(btn.text);
+        uiElements.push(btn.background);
+    });
+    const uiGroup = this.add.group(uiElements);
     
-    questionText.destroy();
-    answerButtons.forEach(btn => btn.destroy());
-    answerButtons = [];
-    questionActive = false;
-    sage.destroy();
+    // Create keyboard event listeners specifically for this modal
+    const upKey = this.input.keyboard.addKey('UP');
+    const downKey = this.input.keyboard.addKey('DOWN');
+    const enterKey = this.input.keyboard.addKey('ENTER');
+    
+     // Up key handler
+     upKey.on('down', function() {
+        if (!questionActive) return;
+        
+        // Update current option style
+        answerButtons[selectedOption].text.setText('  ' + q.a[selectedOption]);
+        answerButtons[selectedOption].background.fillStyle(0x333333, 1);
+        answerButtons[selectedOption].background.fillRoundedRect(
+            modalX + 350 - (buttonWidth / 2), 
+            modalY + 160 + (selectedOption * 40) - (buttonHeight / 2),
+            buttonWidth, buttonHeight, 8
+        );
+        
+        // Change selected option
+        selectedOption = (selectedOption - 1 + answerButtons.length) % answerButtons.length;
+        
+        // Update new selected option style
+        answerButtons[selectedOption].text.setText('➤ ' + q.a[selectedOption]);
+        answerButtons[selectedOption].background.fillStyle(0x555555, 1);
+        answerButtons[selectedOption].background.fillRoundedRect(
+            modalX + 350 - (buttonWidth / 2), 
+            modalY + 160 + (selectedOption * 40) - (buttonHeight / 2),
+            buttonWidth, buttonHeight, 8
+        );
+    });
+    
+    // Down key handler
+    downKey.on('down', function() {
+        if (!questionActive) return;
+        
+        // Update current option style
+        answerButtons[selectedOption].text.setText('  ' + q.a[selectedOption]);
+        answerButtons[selectedOption].background.fillStyle(0x333333, 1);
+        answerButtons[selectedOption].background.fillRoundedRect(
+            modalX + 350 - (buttonWidth / 2), 
+            modalY + 160 + (selectedOption * 40) - (buttonHeight / 2),
+            buttonWidth, buttonHeight, 8
+        );
+        
+        // Change selected option
+        selectedOption = (selectedOption + 1) % answerButtons.length;
+        
+        // Update new selected option style
+        answerButtons[selectedOption].text.setText('➤ ' + q.a[selectedOption]);
+        answerButtons[selectedOption].background.fillStyle(0x555555, 1);
+        answerButtons[selectedOption].background.fillRoundedRect(
+            modalX + 350 - (buttonWidth / 2), 
+            modalY + 160 + (selectedOption * 40) - (buttonHeight / 2),
+            buttonWidth, buttonHeight, 8
+        );
+    });
+    
+    // Enter key handler
+    enterKey.on('down', function() {
+        if (!questionActive) return;
+        questionActive = false;
+        
+        // Create the feedback message
+        let resultText;
+        
+        if (selectedOption === q.correct) {
+            // Correct answer
+            coinsCollected += 50;
+            scene.coinsText.setText(coinsCollected);
+            
+            resultText = scene.add.text(modalX + 350, modalY - 50, 'Well done! +50 points', {
+                fontSize: '24px',
+                fontFamily: 'Arial',
+                fill: '#00ff00',
+                fontStyle: 'bold',
+                backgroundColor: '#000000'
+            });
+        } else {
+            // Wrong answer
+            life--;
+            if (life >= 0) {
+                hearts.children.entries[life].setVisible(false);
+            }
+            
+            resultText = scene.add.text(modalX + 350, modalY - 50, 'Oops! Wrong answer! -1 Heart', {
+                fontSize: '24px',
+                fontFamily: 'Arial',
+                fill: '#ff0000',
+                fontStyle: 'bold',
+                backgroundColor: '#000000',
+            });
+        }
+        
+        resultText.setOrigin(0.5, 0.5);
+        resultText.setScrollFactor(0);
+        uiGroup.add(resultText);
+        
+        // Add a delay before closing the modal
+        scene.time.delayedCall(1000, function() {
+            // Create the node where the gem was
+            let newNode = scene.physics.add.staticSprite(gemX, gemY, 'node').setScale(0.2);
+            newNode.body.setCircle((newNode.displayWidth * 0.9) / 2); 
+            newNode.body.setOffset((newNode.displayWidth * 0.1) / 2, (newNode.displayHeight * 0.1) / 2); 
+            scene.physics.add.collider(duck, newNode);
+            newNode.refreshBody();
+            
+            // Destroy all modal elements
+            uiGroup.destroy(true);
+            
+            // Remove the keyboard event listeners created for this modal
+            upKey.removeAllListeners();
+            downKey.removeAllListeners();
+            enterKey.removeAllListeners();
+            
+            // Resume physics
+            scene.physics.resume();
+            
+            // Check if game over
+            if (life <= 0) {
+                gameOver(scene);
+            }
+        });
+    });
 }
