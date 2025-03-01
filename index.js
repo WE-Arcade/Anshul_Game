@@ -203,16 +203,16 @@ function ensurePaths(lowerPlatforms, upperPlatforms, platformsGroup, scene) {
 
     // Coin UI
     this.add.image(1400, 30, 'coin').setScale(0.8).setScrollFactor(0);
-    this.coinsText = this.add.text(1430, 20, '0', { fontSize: '24px', fill: '#fff' });
+    this.coinsText = this.add.text(1430, 20, '0', { fontSize: '24px', fill: '#000' });
     this.coinsText.setScrollFactor(0);
     // Timer
-    this.timerText = this.add.text(720, 20, 'Time: 120', { fontSize: '24px', fill: '#fff' });
+    this.timerText = this.add.text(720, 20, 'Time: 120', { fontSize: '24px', fill: '#000' });
     this.time.addEvent({
         delay: 1000,
         callback: () => {
             timerValue--;
             this.timerText.setText(`Time: ${timerValue}`);
-            if (timerValue === 0) gameOver(this);
+            if (timerValue === 0) timeUp(this);
         },
         loop: true
     });
@@ -278,7 +278,7 @@ function ensurePaths(lowerPlatforms, upperPlatforms, platformsGroup, scene) {
     
     this.physics.add.collider(bugs, platforms);
     this.physics.add.collider(bugs, ground);
-    // this.physics.add.collider(duck, bugs, hitBug, null, this);
+    this.physics.add.collider(duck, bugs, hitBug, null, this);
 
     this.physics.add.overlap(duck, gemBlocks, askDSAQuestion, null, this);
 
@@ -533,7 +533,10 @@ function hitBug(duck, bug) {
 // Game Over Logic
 function gameOver(scene) {
     duck.setTint(0xff0000);
-    
+
+    scene.physics.pause();
+    scene.time.removeAllEvents();
+
     // Create game over modal
     const modalWidth = 600;
     const modalHeight = 400;
@@ -631,6 +634,107 @@ function gameOver(scene) {
     });
 }
 
+
+function timeUp(scene) {
+    duck.setTint(0xff0000);
+    scene.physics.pause();
+    scene.time.removeAllEvents();
+    
+    // Create game over modal
+    const modalWidth = 600;
+    const modalHeight = 400;
+    const modalX = (scene.cameras.main.width / 2) - (modalWidth / 2);
+    const modalY = (scene.cameras.main.height / 2) - (modalHeight / 2);
+    
+    // Create modal background with rounded corners
+    const modal = scene.add.graphics();
+    modal.fillStyle(0x330000, 0.9);
+    modal.fillRoundedRect(modalX, modalY, modalWidth, modalHeight, 16);
+    modal.lineStyle(4, 0xff0000, 1);
+    modal.strokeRoundedRect(modalX, modalY, modalWidth, modalHeight, 16);
+    
+    // Make the modal fixed to the camera
+    modal.setScrollFactor(0);
+    
+    // Add game over text
+    const headerText = scene.add.text(modalX + 300, modalY + 80, 'Time Up!', {
+        fontSize: '40px',
+        fontFamily: 'Arial',
+        fill: '#ff0000',
+        fontStyle: 'bold'
+    });
+    headerText.setOrigin(0.5, 0.5);
+    headerText.setScrollFactor(0);
+    
+    // Add coins collected text
+    const coinsText = scene.add.text(modalX + 300, modalY + 180, `Coins Collected: ${coinsCollected}`, {
+        fontSize: '28px',
+        fontFamily: 'Arial',
+        fill: '#ffffff'
+    });
+    coinsText.setOrigin(0.5, 0.5);
+    coinsText.setScrollFactor(0);
+    
+    // Add replay button
+    const buttonWidth = 200;
+    const buttonHeight = 60;
+    const buttonX = modalX + 300 - (buttonWidth / 2);
+    const buttonY = modalY + 300 - (buttonHeight / 2);
+    
+    // Create button background
+    const replayButton = scene.add.graphics();
+    replayButton.fillStyle(0x4CAF50, 1);
+    replayButton.fillRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 12);
+    replayButton.lineStyle(2, 0xFFFFFF, 1);
+    replayButton.strokeRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 12);
+    replayButton.setScrollFactor(0);
+    replayButton.setInteractive(new Phaser.Geom.Rectangle(buttonX, buttonY, buttonWidth, buttonHeight), Phaser.Geom.Rectangle.Contains);
+    
+    // Add button text
+    const replayText = scene.add.text(buttonX + 100, buttonY + 30, 'TRY AGAIN', {
+        fontSize: '24px',
+        fontFamily: 'Arial',
+        fill: '#ffffff',
+        fontStyle: 'bold'
+    });
+    replayText.setOrigin(0.5, 0.5);
+    replayText.setScrollFactor(0);
+    
+    // Add hover effect
+    replayButton.on('pointerover', function() {
+        replayButton.clear();
+        replayButton.fillStyle(0x66BB6A, 1);
+        replayButton.fillRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 12);
+        replayButton.lineStyle(2, 0xFFFFFF, 1);
+        replayButton.strokeRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 12);
+    });
+    
+    replayButton.on('pointerout', function() {
+        replayButton.clear();
+        replayButton.fillStyle(0x4CAF50, 1);
+        replayButton.fillRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 12);
+        replayButton.lineStyle(2, 0xFFFFFF, 1);
+        replayButton.strokeRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 12);
+    });
+    
+    // Add click action
+    replayButton.on('pointerdown', function() {
+        // Reset game state and restart the scene
+        life = 3;
+        coinsCollected = 0;
+        timerValue = 120;
+        scene.scene.restart();
+    });
+    
+    // Also allow restart with Enter key
+    const enterKey = scene.input.keyboard.addKey('ENTER');
+    enterKey.on('down', function() {
+        life = 3;
+        coinsCollected = 0;
+        timerValue = 120;
+        scene.scene.restart();
+    });
+}
 function askDSAQuestion(player, gem) {
     // Pause the physics
     this.physics.pause();
