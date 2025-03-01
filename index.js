@@ -69,58 +69,127 @@ function create() {
 
     this.physics.add.collider(duck, ground);
 
-    // Platforms (Binary Tree Nodes)
-    platforms = this.physics.add.staticGroup();
-    let treeLevels = 15;
-    let startX = 700, startY = worldHeight - 200, levelGap = 200;
-    let branchesPerLevel, branchWidth;
+// Platforms (Binary Tree Nodes)
+platforms = this.physics.add.staticGroup();
+let treeLevels = 25;
+let startY = worldHeight - 200;
+let levelGap = 200; 
+gemBlocks = this.physics.add.group({ allowGravity: false, immovable: true });
 
-    gemBlocks = this.physics.add.group({ allowGravity: false, immovable: true });
+let previousLevelPlatforms = [];
+
+for (let i = 0; i < treeLevels; i++) {
+    let currentLevelY = startY - (levelGap * i);
     
-    for (let i = 0; i < treeLevels; i++) {
-        branchesPerLevel = Phaser.Math.Between(2, 5);
-        for (let j = 0; j < branchesPerLevel; j++) {
-            if (branchesPerLevel <= 2 ) {
-                branchWidth = Phaser.Math.Between(500, 700)
-            }
-            else{
-                branchWidth = Phaser.Math.Between(500, 600);
-            }
-            let xOffset = (j - 1) * branchWidth + Phaser.Math.Between(0, 50);
-            let yOffset = -levelGap * i;
-            let nodeType = Phaser.Math.RND.pick(['node','block', 'floatingIsland', 'gemBlock']);
+    let branchesPerLevel;
+    if (i % 2 !== 0) {
+        branchesPerLevel = Phaser.Math.Between(1, 3);
+    } else {
+        branchesPerLevel = Phaser.Math.Between(4, 5);
+    }
     
-            let platform;
-            if (nodeType === 'gemBlock') {
-                let gemBlock = gemBlocks.create(startX + xOffset, startY + yOffset, 'gemBlock');
-                this.physics.add.overlap(duck, gemBlock, askDSAQuestion, null, this);
-            } else {
-                // Create a static body for other platforms
-                platform = platforms.create(startX + xOffset, startY + yOffset, nodeType);
-            }
+    let platformSpacing = worldWidth / (branchesPerLevel + 1);
+    
+    // Store current level platforms for path verification
+    let currentLevelPlatforms = [];
+    
+    for (let j = 0; j < branchesPerLevel; j++) {
+        // Evenly distribute platforms but add some randomness
+        let xPosition = (j + 1) * platformSpacing + Phaser.Math.Between(-50, 50) ;
         
+        // Ensure platform is in bounds
+        xPosition = Phaser.Math.Clamp(xPosition, 100, worldWidth - 100);
+        
+        // Create platform
+        let nodeType = Phaser.Math.RND.pick(['node', 'block', 'floatingIsland', 'gemBlock']);
+        
+        let platform;
+        if (nodeType === 'gemBlock') {
+            let gemBlock = gemBlocks.create(xPosition, currentLevelY, 'gemBlock');
+            this.physics.add.overlap(duck, gemBlock, askDSAQuestion, null, this);
+            currentLevelPlatforms.push({ x: xPosition, y: currentLevelY, width: 40 }); 
+        } else {
+            // Create a static body for other platforms
+            platform = platforms.create(xPosition, currentLevelY, nodeType);
+            
+            let platformWidth;
             if (nodeType === 'node') {
                 platform.setScale(0.2);
                 platform.refreshBody();
                 platform.body.setCircle((platform.displayWidth * 0.9) / 2); 
-                platform.body.setOffset( (platform.displayWidth * 0.1) / 2, (platform.displayHeight * 0.1) / 2); 
-                
-                
-            }
-            if (nodeType === 'floatingIsland') {
+                platform.body.setOffset((platform.displayWidth * 0.1) / 2, (platform.displayHeight * 0.1) / 2);
+                platformWidth = platform.displayWidth * 0.9;
+            } else if (nodeType === 'floatingIsland') {
                 platform.setScale(0.5);
                 platform.refreshBody();
                 platform.setSize(platform.width * 0.45, platform.height * 0.2);
                 platform.setOffset(10, platform.height * 0.06);
-            }
-            if (nodeType === 'block') {
+                platformWidth = platform.width * 0.45;
+            } else if (nodeType === 'block') {
                 platform.setScale(1.3);
                 platform.refreshBody();
+                platformWidth = platform.width * 1.3;
             }
-        } 
+            
+            currentLevelPlatforms.push({ x: xPosition, y: currentLevelY, width: platformWidth });
+        }
     }
+    
+    // If this isn't the first level, verify there's a path from previous level
+    if (i > 0 && previousLevelPlatforms.length > 0) {
+        ensurePaths(previousLevelPlatforms, currentLevelPlatforms, platforms, this);
+    }
+    
+    // Store for next iteration
+    previousLevelPlatforms = currentLevelPlatforms;
+}
 
-
+// Function to ensure there's at least one path between levels
+function ensurePaths(lowerPlatforms, upperPlatforms, platformsGroup, scene) {
+    // Check if any lower platform can reach any upper platform with a jump
+    let maxJumpDistance = 200;
+    let paths = false;
+    
+    for (let lower of lowerPlatforms) {
+        for (let upper of upperPlatforms) {
+            let horizontalDistance = Math.abs(lower.x - upper.x);
+            
+            // If platforms are close enough horizontally for a jump
+            if (horizontalDistance < maxJumpDistance) {
+                paths = true;
+                break;
+            }
+        }
+        if (paths) break;
+    }
+    
+    // If no viable paths, add a connecting platform
+    if (!paths && lowerPlatforms.length > 0 && upperPlatforms.length > 0) {
+        // Choose a random platform from each level
+        let lowerPlatform = lowerPlatforms[Phaser.Math.Between(0, lowerPlatforms.length - 1)];
+        let upperPlatform = upperPlatforms[Phaser.Math.Between(0, upperPlatforms.length - 1)];
+        
+        // Create a platform in between them
+        let midX = (lowerPlatform.x + upperPlatform.x) / 2;
+        let midY = (lowerPlatform.y + upperPlatform.y) / 2;
+        
+        // Add a stepping stone
+        let nodeType = Phaser.Math.RND.pick(['node', 'floatingIsland']);
+        let bridge = platformsGroup.create(midX, midY, nodeType);
+        
+        if (nodeType === 'node') {
+            bridge.setScale(0.2);
+            bridge.refreshBody();
+            bridge.body.setCircle((bridge.displayWidth * 0.9) / 2); 
+            bridge.body.setOffset((bridge.displayWidth * 0.1) / 2, (bridge.displayHeight * 0.1) / 2);
+        } else {
+            bridge.setScale(0.5);
+            bridge.refreshBody();
+            bridge.setSize(bridge.width * 0.45, bridge.height * 0.2);
+            bridge.setOffset(10, bridge.height * 0.06);
+        }
+    }
+}
     this.physics.add.collider(duck, platforms);
     this.physics.add.collider(duck, gemBlocks);
 
@@ -222,14 +291,14 @@ function create() {
     this.cameras.main.startFollow(duck, true, 0.1, 0.1);
     this.cameras.main.scrollY = worldHeight - this.cameras.main.height;
 
-
-    winningPlatform = platforms.create(worldWidth / 2, 6800, 'floatingIsland');
+    winningPlatformY = startY - (treeLevels * levelGap )
+    winningPlatform = platforms.create(worldWidth / 2, winningPlatformY, 'floatingIsland');
     winningPlatform.setScale(0.5);
     winningPlatform.refreshBody();
     winningPlatform.setSize(winningPlatform.width * 0.45, winningPlatform.height * 0.2);
     winningPlatform.setOffset(10, winningPlatform.height * 0.06);
     // Add flag on the left side of the platform
-    flag = this.physics.add.staticSprite(winningPlatform.x - 10, winningPlatform.y - 120, 'flag');
+    flag = this.physics.add.staticSprite(winningPlatform.x - 10, winningPlatform.y - 80, 'flag');
     flag.setScale(0.3);
     
     // Add Asokan above the platform
