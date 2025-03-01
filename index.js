@@ -292,16 +292,17 @@ function ensurePaths(lowerPlatforms, upperPlatforms, platformsGroup, scene) {
     this.cameras.main.scrollY = worldHeight - this.cameras.main.height;
 
     winningPlatformY = startY - (treeLevels * levelGap )
-    winningPlatform = platforms.create(worldWidth / 2, winningPlatformY, 'floatingIsland');
+    winningPlatform = this.physics.add.staticSprite(worldWidth / 2, winningPlatformY, 'floatingIsland');
     winningPlatform.setScale(0.5);
     winningPlatform.refreshBody();
     winningPlatform.setSize(winningPlatform.width * 0.45, winningPlatform.height * 0.2);
     winningPlatform.setOffset(10, winningPlatform.height * 0.06);
+
     // Add flag on the left side of the platform
     flag = this.physics.add.staticSprite(winningPlatform.x - 10, winningPlatform.y - 80, 'flag');
     flag.setScale(0.3);
     
-    // Add Asokan above the platform
+    // Add Asokan to the right of the platform
     asokan = this.add.sprite(winningPlatform.x + 150, winningPlatform.y - 90, 'asokan');
     asokan.setScale(0.4);
 
