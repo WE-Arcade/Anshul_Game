@@ -38,7 +38,7 @@ function preload() {
     this.load.image('sage', 'assets/sage.png');
     this.load.image('tree', 'assets/tree.png');
     this.load.image('gemBlock', 'assets/gemBlock.png');
-    this.load.image('star', 'assets/star.png'); 
+    this.load.image('star', 'assets/star_big.jpg'); 
     this.load.image('node', 'assets/node.png'); 
     this.load.image('block', 'assets/block.png'); 
     this.load.image('cloud', 'assets/cloud.png'); 
@@ -218,16 +218,59 @@ function ensurePaths(lowerPlatforms, upperPlatforms, platformsGroup, scene) {
     });
     this.timerText.setScrollFactor(0);
 
-    stars = this.physics.add.staticGroup();
-    books = this.physics.add.staticGroup();
+    stars = this.physics.add.group({
+        allowGravity: false,
+        immovable: true
+    });
+
+    books = this.physics.add.group({
+        allowGravity: false,
+        immovable: true
+    });
     platforms.children.iterate((platform) => {
+        // Random chance to add a star (50%)
         if (Phaser.Math.Between(0, 1)) {
-            stars.create(platform.x, platform.y - 30, 'star').setScale(0.1);
+            // Position above the platform
+            let star = stars.create(
+                platform.x + Phaser.Math.Between(-20, 20), // Random horizontal offset
+                platform.y - 40, // Position above platform
+                'star'
+            );
+            star.setScale(0.07);
+            
+            // Add a simple floating animation
+            this.tweens.add({
+                targets: star,
+                y: star.y - 10,
+                duration: 1500,
+                ease: 'Sine.easeInOut',
+                yoyo: true,
+                repeat: -1
+            });
         }
-        if (Phaser.Math.Between(0, 1)) {
-            books.create(platform.x + 50, platform.y - 30, 'book').setScale(0.1);
+        
+        // Random chance to add a book (40%)
+        if (Phaser.Math.Between(0, 9) < 4) {
+            // Position above the platform, but different from star
+            let book = books.create(
+                platform.x + Phaser.Math.Between(-40, 40), // Random horizontal offset
+                platform.y - 35, // Position above platform
+                'book'
+            );
+            book.setScale(0.1);
+            
+            // Add a slight rotation animation
+            this.tweens.add({
+                targets: book,
+                angle: Phaser.Math.Between(-5, 5),
+                duration: 2000,
+                ease: 'Sine.easeInOut',
+                yoyo: true,
+                repeat: -1
+            });
         }
     });
+    
     this.physics.add.overlap(duck, stars, collectStar, null, this);
     this.physics.add.overlap(duck, books, collectBook, null, this);
 
@@ -473,12 +516,67 @@ function collectStar(duck, star) {
     star.disableBody(true, true);
     coinsCollected += 10;
     this.coinsText.setText(coinsCollected);
+
+
+    // Add a simple visual feedback
+    const starText = this.add.text(star.x, star.y - 20, '+10', {
+        fontSize: '16px',
+        fill: '#00ff00',
+        stroke: '#000',
+        strokeThickness: 3,
+        fontStyle: 'bold'
+    });
+
+    // Animate the text
+    this.tweens.add({
+        targets: starText,
+        y: starText.y - 30,
+        alpha: 0,
+        duration: 800,
+        onComplete: () => {
+            starText.destroy();
+        }
+    });
+    
+    // Add a simple particle effect
+    const particles = this.add.particles(star.x, star.y, 'star', {
+        scale: { start: 0.05, end: 0 },
+        quantity: 5,
+        lifespan: 500,
+        speed: { min: 50, max: 100 },
+        gravityY: 200
+    });
+    
+    // Auto-destroy the particles after animation completes
+    this.time.delayedCall(500, () => {
+        particles.destroy();
+    });
 }
 
 function collectBook(duck, book) {
     book.disableBody(true, true);
     coinsCollected += 20; 
     this.coinsText.setText(coinsCollected);
+    
+    // Add a simple visual feedback
+    const text = this.add.text(book.x, book.y - 20, '+20', {
+        fontSize: '16px',
+        fill: '#00ff00',
+        stroke: '#000',
+        strokeThickness: 3,
+        fontStyle: 'bold'
+    });
+    
+    // Animate the text
+    this.tweens.add({
+        targets: text,
+        y: text.y - 30,
+        alpha: 0,
+        duration: 800,
+        onComplete: () => {
+            text.destroy();
+        }
+    });
 }
 
 function update() {
@@ -505,6 +603,26 @@ function hitBug(duck, bug) {
     if (duckBottom <= bugTop + 10 || bug.body.blocked.up) { // Added margin (5 pixels)
         bug.destroy(); // Smash the bug
         duck.setVelocityY(-250); // Bounce slightly upwards
+        coinsCollected += 10;
+        this.coinsText.setText(coinsCollected);
+
+        const scoreText = this.add.text(bug.x, bug.y - 20, '+10', {
+            fontSize: '16px',
+            fill: '#00ff00', // Green color for positive feedback
+            stroke: '#000',
+            strokeThickness: 3,
+            fontStyle: 'bold'
+        });
+
+        this.tweens.add({
+            targets: scoreText,
+            y: scoreText.y - 30,  // Move up
+            alpha: 0,             // Fade out
+            duration: 800,        // Duration of animation
+            onComplete: () => {
+                scoreText.destroy(); // Remove text after animation
+            }
+        });
     } else {
         if (!isInvincible) { // Check if duck is NOT invincible
             isInvincible = true; // Make duck temporarily invincible
