@@ -4,7 +4,7 @@ const config = {
     height: 735,
     physics: {
         default: 'arcade',
-        arcade: { gravity: { y: 300 }, debug: false }
+        arcade: { gravity: { y: 300 }, debug: true }
     },
     scene: {
         preload: preload,
@@ -70,14 +70,21 @@ function create() {
 
     // Platforms (Binary Tree Nodes)
     platforms = this.physics.add.staticGroup();
-    let treeLevels = 20;
-    let startX = 768, startY = worldHeight - 300, levelGap = 200;
-    let branchesPerLevel = 3, branchWidth = 250;
+    let treeLevels = 25;
+    let startX = 700, startY = worldHeight - 200, levelGap = 200;
+    let branchesPerLevel, branchWidth;
 
     gemBlocks = this.physics.add.group({ allowGravity: false, immovable: true });
     
     for (let i = 0; i < treeLevels; i++) {
+        branchesPerLevel = Phaser.Math.Between(1, 5);
         for (let j = 0; j < branchesPerLevel; j++) {
+            if (branchesPerLevel <= 2 ) {
+                branchWidth = Phaser.Math.Between(400, 700)
+            }
+            else{
+                branchWidth = Phaser.Math.Between(300, 500);
+            }
             let xOffset = (j - 1) * branchWidth + Phaser.Math.Between(-50, 50);
             let yOffset = -levelGap * i;
             let nodeType = Phaser.Math.RND.pick(['node','block', 'floatingIsland', 'gemBlock']);
@@ -94,10 +101,16 @@ function create() {
             if (nodeType === 'node') {
                 platform.setScale(0.2);
                 platform.refreshBody();
+                platform.body.setCircle((platform.displayWidth * 0.9) / 2); 
+                platform.body.setOffset( (platform.displayWidth * 0.1) / 2, (platform.displayHeight * 0.1) / 2); 
+                
+                
             }
             if (nodeType === 'floatingIsland') {
                 platform.setScale(0.5);
                 platform.refreshBody();
+                platform.setSize(platform.width * 0.45, platform.height * 0.2);
+                platform.setOffset(10, platform.height * 0.06);
             }
             if (nodeType === 'block') {
                 platform.setScale(1.3);
@@ -155,6 +168,7 @@ function create() {
 
     // Code Bugs (Enemies)
     bugs = this.physics.add.group();
+    let bugSpeed = 50;
     platforms.children.iterate((platform) => {
         if (Phaser.Math.Between(0, 1)) {
             let bug = bugs.create(platform.x, platform.y - 10, 'bug');
@@ -164,7 +178,7 @@ function create() {
     });
     this.physics.add.collider(bugs, platforms);
     this.physics.add.collider(bugs, ground);
-    this.physics.add.collider(duck, bugs, hitBug, null, this);
+    // this.physics.add.collider(duck, bugs, hitBug, null, this);
 
     // Moving bugs left and right
     bugs.children.iterate((bug) => {
@@ -312,6 +326,8 @@ function askDSAQuestion(player, gem) {
     let gemY = gem.y;
     gem.destroy();
     let newNode = this.physics.add.staticSprite(gemX, gemY, 'node').setScale(0.2);
+    newNode.body.setCircle((newNode.displayWidth * 0.9) / 2); 
+    newNode.body.setOffset( (newNode.displayWidth * 0.1) / 2, (newNode.displayHeight * 0.1) / 2); 
     this.physics.add.collider(duck, newNode);
     newNode.refreshBody();
     let questionText = this.add.text(550, 550, '', { fontSize: '24px', fill: '#fff', backgroundColor: '#000'  });
