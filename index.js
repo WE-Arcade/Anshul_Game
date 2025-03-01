@@ -16,7 +16,7 @@ const config = {
 const game = new Phaser.Game(config);
 let duck, cursors, timer, timerText, hearts, coinsCollected = 0;
 let life = 3, timerValue = 120;
-var bombs, platforms, stars, books;
+var platforms, stars, books;
 let selectedOption = 0, questionActive = false, questionText, answerButtons = [], sage;
 let isInvincible = false; //for the duck
 let worldHeight = 10000;
@@ -39,7 +39,6 @@ function preload() {
     this.load.image('tree', 'assets/tree.png');
     this.load.image('gemBlock', 'assets/gemBlock.png');
     this.load.image('star', 'assets/star.png'); 
-    this.load.image('bomb', 'assets/bomb.png'); 
     this.load.image('node', 'assets/node.png'); 
     this.load.image('block', 'assets/block.png'); 
     this.load.image('cloud', 'assets/cloud.png'); 
@@ -232,9 +231,6 @@ function ensurePaths(lowerPlatforms, upperPlatforms, platformsGroup, scene) {
     this.physics.add.overlap(duck, stars, collectStar, null, this);
     this.physics.add.overlap(duck, books, collectBook, null, this);
 
-    // Bombs (Hazards)
-    bombs = this.physics.add.group();
-    // spawnBomb(this);
 
     // Code Bugs (Enemies)
     bugs = this.physics.add.group();
@@ -282,7 +278,7 @@ function ensurePaths(lowerPlatforms, upperPlatforms, platformsGroup, scene) {
     
     this.physics.add.collider(bugs, platforms);
     this.physics.add.collider(bugs, ground);
-    this.physics.add.collider(duck, bugs, hitBug, null, this);
+    // this.physics.add.collider(duck, bugs, hitBug, null, this);
 
     this.physics.add.overlap(duck, gemBlocks, askDSAQuestion, null, this);
 
@@ -331,28 +327,58 @@ function checkWin(duck, flag) {
     
     // Pause the game physics
     this.physics.pause();
+
+    this.time.removeAllEvents();
     
     // Store scene reference
     const scene = this;
     
     // Create victory modal
-    const modalWidth = 600;
-    const modalHeight = 400;
+    const modalWidth = 800;
+    const modalHeight = 600;
     const modalX = (this.cameras.main.width / 2) - (modalWidth / 2);
     const modalY = (this.cameras.main.height / 2) - (modalHeight / 2);
     
     // Create modal background with rounded corners
     const modal = this.add.graphics();
-    modal.fillStyle(0x000033, 0.9);
+    modal.fillStyle(0x000033, 1);
     modal.fillRoundedRect(modalX, modalY, modalWidth, modalHeight, 16);
     modal.lineStyle(4, 0xffff00, 1);
     modal.strokeRoundedRect(modalX, modalY, modalWidth, modalHeight, 16);
     
     // Make the modal fixed to the camera
     modal.setScrollFactor(0);
+    // Add sage to the top left of the modal
+    const sage = this.add.sprite(modalX + 50, modalY + 60, 'sage').setScale(0.4);
+    sage.setScrollFactor(0);
+    
+    // Add asokan to the top right of the modal
+    const modalAsokan = this.add.sprite(modalX + modalWidth - 30, modalY + 60, 'asokan').setScale(0.38);
+    modalAsokan.setScrollFactor(0);
+    
+    // Add animations for sage and asokan
+    this.tweens.add({
+        targets: sage,
+        y: sage.y - 10,
+        duration: 1500,
+        ease: 'Sine.easeInOut',
+        yoyo: true,
+        repeat: -1
+    });
+
+    this.tweens.add({
+        targets: modalAsokan,
+        y: modalAsokan.y - 10,
+        angle: { from: -5, to: 5 },
+        duration: 2000,
+        ease: 'Sine.easeInOut',
+        yoyo: true,
+        repeat: -1
+    });
+    
     
     // Add congratulations text
-    const headerText = this.add.text(modalX + 300, modalY + 80, 'Congratulations, you won!!', {
+    const headerText = this.add.text(modalX + modalWidth/2, modalY + 120, 'Congratulations, you won!!', {
         fontSize: '32px',
         fontFamily: 'Arial',
         fill: '#FFD700',
@@ -362,7 +388,7 @@ function checkWin(duck, flag) {
     headerText.setScrollFactor(0);
     
     // Add coins collected text
-    const coinsText = this.add.text(modalX + 300, modalY + 180, `Coins Collected: ${coinsCollected}`, {
+    const coinsText = this.add.text(modalX + modalWidth/2, modalY + 250, `Coins Collected: ${coinsCollected}`, {
         fontSize: '28px',
         fontFamily: 'Arial',
         fill: '#ffffff'
@@ -371,7 +397,7 @@ function checkWin(duck, flag) {
     coinsText.setScrollFactor(0);
     
     // Add time left text
-    const timeText = this.add.text(modalX + 300, modalY + 230, `Time Left: ${timerValue} seconds`, {
+    const timeText = this.add.text(modalX + modalWidth/2, modalY + 320, `Time Left: ${timerValue} seconds`, {
         fontSize: '28px',
         fontFamily: 'Arial',
         fill: '#ffffff'
@@ -382,8 +408,8 @@ function checkWin(duck, flag) {
     // Add replay button
     const buttonWidth = 200;
     const buttonHeight = 60;
-    const buttonX = modalX + 300 - (buttonWidth / 2);
-    const buttonY = modalY + 300 - (buttonHeight / 2);
+    const buttonX = modalX + (modalWidth/2) - (buttonWidth/2);
+    const buttonY = modalY + 450;
     
     // Create button background
     const replayButton = this.add.graphics();
@@ -392,11 +418,10 @@ function checkWin(duck, flag) {
     replayButton.lineStyle(2, 0xFFFFFF, 1);
     replayButton.strokeRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 12);
     replayButton.setScrollFactor(0);
-    replayButton.setInteractive(new Phaser.Geom.Rectangle(buttonX, buttonY, buttonWidth, buttonHeight), 
-                                Phaser.Geom.Rectangle.Contains);
+    replayButton.setInteractive(new Phaser.Geom.Rectangle(buttonX, buttonY, buttonWidth, buttonHeight), Phaser.Geom.Rectangle.Contains);
     
     // Add button text
-    const replayText = this.add.text(buttonX + 100, buttonY + 30, 'PLAY AGAIN', {
+    const replayText = this.add.text(buttonX + buttonWidth/2, buttonY + buttonHeight/2, 'PLAY AGAIN', {
         fontSize: '24px',
         fontFamily: 'Arial',
         fill: '#ffffff',
@@ -454,38 +479,6 @@ function collectBook(duck, book) {
     book.disableBody(true, true);
     coinsCollected += 20; 
     this.coinsText.setText(coinsCollected);
-}
-
-function spawnBomb(scene) {
-    let bomb = bombs.create(Phaser.Math.Between(200, 1300), 0, 'bomb');
-    bomb.setBounce(1);
-    bomb.setCollideWorldBounds(true);
-    bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
-    bomb.allowGravity = false;
-
-    scene.physics.add.collider(bomb, platforms);
-    scene.physics.add.collider(bomb, ground);
-    scene.physics.add.collider(duck, bomb, hitBomb, null, scene);
-
-    scene.time.addEvent({
-        delay: 12000, // Every 10 seconds, add a new bomb
-        callback: () => spawnBomb(scene),
-        loop: true
-    });
-}
-
-function hitBomb(duck, bomb) {
-    life--;
-    hearts.children.entries[life].setVisible(false);
-    
-    if (life === 0) {
-        this.physics.pause();
-        duck.setTint(0xff0000);
-        gameOver(this);
-    } else {
-        duck.setTint(0xff0000);
-        this.time.delayedCall(1000, () => duck.clearTint());
-    }
 }
 
 function update() {
@@ -667,7 +660,7 @@ function askDSAQuestion(player, gem) {
     modal.setScrollFactor(0);
     
     // Add the sage at the top left of the modal
-    sage = this.add.image(modalX + 80, modalY + 80, 'sage').setScale(0.4);
+    sage = this.add.image(modalX + 80, modalY + 60, 'sage').setScale(0.4);
     sage.setScrollFactor(0);
     
     // Add header
