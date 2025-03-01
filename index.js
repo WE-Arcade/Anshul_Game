@@ -26,9 +26,7 @@ let winningPlatform, flag, asokan;
 let gameWon = false;
 
 function preload() {
-    this.load.image('sky', 'assets/sky.png'); 
     this.load.image('background', 'assets/sky_background.png'); 
-    this.load.image('platform', 'assets/platform.png'); 
     this.load.image('floatingIsland', 'assets/floating_island.png')
     this.load.image('duck', 'assets/duck.png');
     this.load.image('heart', 'assets/heart2.png');
@@ -36,12 +34,10 @@ function preload() {
     this.load.image('book', 'assets/book.png');
     this.load.image('bug', 'assets/code_bug.png');
     this.load.image('sage', 'assets/sage.png');
-    this.load.image('tree', 'assets/tree.png');
     this.load.image('gemBlock', 'assets/gemBlock.png');
     this.load.image('star', 'assets/star_big.jpg'); 
     this.load.image('node', 'assets/node.png'); 
     this.load.image('block', 'assets/block.png'); 
-    this.load.image('cloud', 'assets/cloud.png'); 
     this.load.image('ground', 'assets/ground.png');   
     this.load.image('asokan', 'assets/asokan_sage.png');
     this.load.image('flag', 'assets/flag.png');
