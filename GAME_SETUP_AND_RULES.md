@@ -1,6 +1,6 @@
 # Anshul Game World 3 - Setup and Rules
 
-Welcome to **Anshul Game - World 3 **! This document provides detailed instructions on how to set up the game on your local machine and the rules for playing.
+Welcome to **Anshul Game - World 3** ! This document provides detailed instructions on how to set up the game on your local machine and the rules for playing.
 
 ---
 
