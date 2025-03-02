@@ -587,17 +587,13 @@ function update() {
     if (cursors.up.isDown && duck.body.touching.down) {
         duck.setVelocityY(-360);
     }
-    // // infinite scrolling effect
-    // if (duck.y < this.cameras.main.scrollY + 300) {
-    //     this.cameras.main.scrollY -= 5;
-    // }
 }
 function hitBug(duck, bug) {
     let duckBottom =duck.body.y + duck.body.height;
     let bugTop =  bug.body.y;
 
     // Check if the duck is falling and hits the bug from the top
-    if (duckBottom <= bugTop + 10 || bug.body.blocked.up) { // Added margin (5 pixels)
+    if (duckBottom <= bugTop + 10 || bug.body.blocked.up) { // Added margin (10 pixels)
         bug.destroy(); // Smash the bug
         duck.setVelocityY(-250); // Bounce slightly upwards
         coinsCollected += 10;
@@ -605,7 +601,7 @@ function hitBug(duck, bug) {
 
         const scoreText = this.add.text(bug.x, bug.y - 20, '+10', {
             fontSize: '16px',
-            fill: '#00ff00', // Green color for positive feedback
+            fill: '#00ff00', // Green
             stroke: '#000',
             strokeThickness: 3,
             fontStyle: 'bold'
@@ -617,7 +613,7 @@ function hitBug(duck, bug) {
             alpha: 0,             // Fade out
             duration: 800,        // Duration of animation
             onComplete: () => {
-                scoreText.destroy(); // Remove text after animation
+                scoreText.destroy();
             }
         });
     } else {
