@@ -25,8 +25,8 @@ function App() {
     <div className="app">
       {currentPage === 'landing' && <LandingPage onProceed={handleProceed} />}
       {currentPage === 'home' && <HomePage onSelectLevel={handleSelectLevel} />}
-      {currentPage === 'level1' && <Game />}
-      {currentPage === 'level2' && <Level2 onBack={handleBackToHome} />}
+      {currentPage === 'level1' && <Level2 onBack={handleBackToHome} />}
+      {currentPage === 'level2' && <Game onBack={handleBackToHome} />}
       {currentPage === 'level3' && <Level3 onBack={handleBackToHome} />}
     </div>
   );

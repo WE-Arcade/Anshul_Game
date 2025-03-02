@@ -7,13 +7,13 @@ const HomePage = ({ onSelectLevel }) => {
       <h2>Select a Level</h2>
       <div className="level-selection">
         <button className="level-button" onClick={() => onSelectLevel('level1')}>
-          Level 1: Binary Tree Adventure
+          World 1 : Arrays and Strings
         </button>
         <button className="level-button" onClick={() => onSelectLevel('level2')}>
-          Level 2: Graph Traversal Challenge (Coming Soon)
+          Level 2: Binary Trees
         </button>
         <button className="level-button" onClick={() => onSelectLevel('level3')}>
-          Level 3: Dynamic Programming Quest (Coming Soon)
+          Level 3: Stacks and Queues
         </button>
       </div>
     </div>
