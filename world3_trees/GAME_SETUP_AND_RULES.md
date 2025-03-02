@@ -18,8 +18,8 @@ Before running the game, ensure you have the following installed:
 1. Open a terminal and navigate to the directory where you want to store the project.
 2. Clone the repository using:
    ```sh
-   git clone <repository-url>
-   cd Anshul_Game
+   git clone [https://github.com/WE-Arcade/Anshul_Game.git](https://github.com/WE-Arcade/Anshul_Game.git)
+   cd Anshul_Game/world3_trees
    ```
 
 ### **Installing Dependencies**
