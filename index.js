@@ -103,6 +103,7 @@ for (let i = 0; i < treeLevels; i++) {
             let gemBlock = gemBlocks.create(xPosition, currentLevelY, 'gemBlock');
             this.physics.add.overlap(duck, gemBlock, askDSAQuestion, null, this);
             currentLevelPlatforms.push({ x: xPosition, y: currentLevelY, width: 40 }); 
+            gemBlock.setScale(1.4);
         } else {
             // Create a static body for other platforms
             platform = platforms.create(xPosition, currentLevelY, nodeType);
@@ -280,8 +281,8 @@ function ensurePaths(lowerPlatforms, upperPlatforms, platformsGroup, scene) {
     // Shuffle the platforms array to randomize which platforms get bugs
     Phaser.Utils.Array.Shuffle(platformsArray);
     
-    // Use only 90% of platforms for bugs
-    let platformsForBugs = platformsArray.slice(0, Math.floor(platformsArray.length * 0.9));
+    // Use only 80% of platforms for bugs
+    let platformsForBugs = platformsArray.slice(0, Math.floor(platformsArray.length * 0.8));
     
     platformsForBugs.forEach((platform) => {
         let xOffset = Phaser.Math.Between(-50, 50);
