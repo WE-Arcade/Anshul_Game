@@ -10,10 +10,10 @@ const HomePage = ({ onSelectLevel }) => {
           World 1 : Arrays and Strings
         </button>
         <button className="level-button" onClick={() => onSelectLevel('level2')}>
-          Level 2: Binary Trees
+          World 2: Binary Trees
         </button>
         <button className="level-button" onClick={() => onSelectLevel('level3')}>
-          Level 3: Stacks and Queues
+          World 3: Stacks and Queues
         </button>
       </div>
     </div>

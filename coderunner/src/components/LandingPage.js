@@ -19,6 +19,7 @@ const LandingPage = ({ onProceed }) => {
     function preload() {
       this.load.image('sage', 'assets/sage.png');
       this.load.image('asokan', 'assets/asokan_sage.png');
+      this.load.image('anasuya', 'assets/anasuya_sage.png');
       this.load.image('background', 'assets/sky_background.png');
       this.load.audio('backgroundMusic', 'assets/background_music.mp3');
     }
@@ -27,12 +28,23 @@ const LandingPage = ({ onProceed }) => {
       // Background
       this.add.image(400, 300, 'background').setScale(2);
 
-      // Sage sprite with animation
+      // Sage (Anshul) sprite with animation
       const sage = this.add.sprite(200, 400, 'sage').setScale(0.5);
       this.tweens.add({
         targets: sage,
         y: sage.y - 20,
         duration: 1000,
+        ease: 'Sine.easeInOut',
+        yoyo: true,
+        repeat: -1,
+      });
+
+      // Anasuya sprite with animation (adjusted to be smaller)
+      const anasuya = this.add.sprite(400, 400, 'anasuya').setScale(0.2); // Reduced from 0.45 to 0.3
+      this.tweens.add({
+        targets: anasuya,
+        y: anasuya.y - 20,
+        duration: 1500,
         ease: 'Sine.easeInOut',
         yoyo: true,
         repeat: -1,
@@ -56,9 +68,9 @@ const LandingPage = ({ onProceed }) => {
         fontStyle: 'bold',
         align: 'center',
       }).setOrigin(0.5);
-      this.add.text(400, 150, 'by Anshul (Sage)', {
+      this.add.text(400, 150, 'by Anshul (Sage), Anasuya (Sage), Asokan (Wizard)', {
         fontSize: '24px',
-        color: '#ffffff',
+        color: 'black',
         align: 'center',
       }).setOrigin(0.5);
 
@@ -76,47 +88,41 @@ const LandingPage = ({ onProceed }) => {
     <div className="landing-page">
       <div id="landing-canvas" style={{ width: '800px', height: '600px', margin: '0 auto' }}></div>
       <div className="dsa-info">
-        <h2>What is DSA?</h2>
+        <h2>Welcome to the World of DSA!</h2>
         <p>
-          Data Structures and Algorithms (DSA) refer to the study of organizing and storing data (data structures) 
-          and the methods or procedures (algorithms) used to manipulate that data efficiently. A data structure is a 
-          way to organize data in a computer so that it can be used effectively, such as arrays, linked lists, trees, 
-          and graphs. An algorithm is a set of instructions designed to solve a specific problem, like sorting or searching.
+          Embark on an epic journey through the realm of Data Structures and Algorithms, where coding meets adventure! 
+          Guided by the wise sages <strong>Anshul</strong> and <strong>Anasuya</strong>, you will navigate a world 
+          filled with challenges, puzzles, and battles against the dreaded <strong>Code Smells</strong>.
         </p>
-        <h2>Why is DSA Important?</h2>
+        <p>
+          Your quest? Master the art of clean and efficient code! Earn <strong>LeetCode Coins</strong> by solving tricky 
+          programming puzzles, strengthen your problem-solving skills, and collect powerful rewards to aid you on your path. 
+          But beware—only the most skilled coders will make it to the final challenge: facing the legendary <strong>Wizard Asokan</strong>. 
+          Prove your mastery, unlock the secrets of clean code, and claim the ultimate wisdom!
+        </p>
+        <h2>Why Learn DSA Through This Quest?</h2>
         <ul>
           <li>
-            <strong>Efficiency:</strong> DSA helps in writing efficient code by choosing the right data structure and 
-            algorithm, reducing time and space complexity. For example, using a hash table for lookups is much faster than 
-            a linear search.
+            <strong>Sharpen Your Skills:</strong> Master key concepts like arrays, trees, and graphs while having fun!
           </li>
           <li>
-            <strong>Problem Solving:</strong> It provides a structured way to tackle complex problems, which is crucial 
-            in software development, competitive programming, and technical interviews.
+            <strong>Battle Code Smells:</strong> Solve problems, refactor messy code, and become a clean code warrior.
           </li>
           <li>
-            <strong>Scalability:</strong> In large-scale applications, efficient DSA ensures that the system can handle 
-            increased data loads without performance degradation.
+            <strong>Level Up:</strong> Progress through increasingly challenging levels and earn rewards for your knowledge.
           </li>
           <li>
-            <strong>Foundation for Advanced Concepts:</strong> DSA is the backbone of many advanced topics like machine 
-            learning, databases, and operating systems.
-          </li>
-          <li>
-            <strong>Job Opportunities:</strong> Mastery of DSA is often a key requirement in technical interviews at top 
-            tech companies, as it demonstrates problem-solving skills and technical proficiency.
+            <strong>Become a Legend:</strong> Only those who reach the Wizard Asokan will attain the wisdom of clean code mastery.
           </li>
         </ul>
         <p>
-          In this game, you'll navigate through levels that test your DSA knowledge while having fun! Are you ready to 
-          become a DSA master?
+          Are you ready to begin your journey? The world of DSA awaits! 
         </p>
       </div>
       <button className="proceed-button" onClick={onProceed}>
-        Proceed to Levels
+        Begin Your Quest
       </button>
     </div>
   );
-};
-
+}  
 export default LandingPage;
