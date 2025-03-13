@@ -4,6 +4,7 @@ import HomePage from './components/HomePage';
 import Game from './components/Game';
 import Level2 from './components/Level2';
 import Level3 from './components/Level3';
+import StackQueueGame from './components/stacks';
 import './styles.css';
 
 function App() {
@@ -27,7 +28,7 @@ function App() {
       {currentPage === 'home' && <HomePage onSelectLevel={handleSelectLevel} />}
       {currentPage === 'level1' && <Level2 onBack={handleBackToHome} />}
       {currentPage === 'level2' && <Game onBack={handleBackToHome} />}
-      {currentPage === 'level3' && <Level3 onBack={handleBackToHome} />}
+      {currentPage === 'level3' && <StackQueueGame onBack={handleBackToHome} />}
     </div>
   );
 }
