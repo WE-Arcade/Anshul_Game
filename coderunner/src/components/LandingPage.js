@@ -40,7 +40,7 @@ const LandingPage = ({ onProceed }) => {
       });
 
       // Anasuya sprite with animation (adjusted to be smaller)
-      const anasuya = this.add.sprite(400, 400, 'anasuya').setScale(0.2); // Reduced from 0.45 to 0.3
+      const anasuya = this.add.sprite(400, 400, 'anasuya').setScale(0.15); // Reduced from 0.45 to 0.3
       this.tweens.add({
         targets: anasuya,
         y: anasuya.y - 20,

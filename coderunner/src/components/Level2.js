@@ -387,7 +387,7 @@ const Level2 = ({ onBack }) => {
       modal.strokeRoundedRect(modalX, modalY, modalWidth, modalHeight, 16);
       modal.setScrollFactor(0);
 
-      const anasuya = scene.add.image(modalX + 150, modalY + 200, 'anasuya').setScale(0.14);
+      const anasuya = scene.add.image(modalX + 150, modalY + 200, 'anasuya').setScale(0.08);
       anasuya.setOrigin(1, 0.5);
       anasuya.setScrollFactor(0);
       scene.tweens.add({
